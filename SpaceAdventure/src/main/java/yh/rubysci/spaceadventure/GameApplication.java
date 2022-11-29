@@ -10,6 +10,8 @@ import java.io.IOException;
 public class GameApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
+        GameSounds.getSingleton();
+
         FXMLLoader fxmlLoader = new FXMLLoader(GameApplication.class.getResource("game-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1024, 720);
         stage.setTitle("Hello!");
