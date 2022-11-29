@@ -12,6 +12,12 @@ public class GameController {
 
     @FXML
     protected void onStartButtonClick() {
+
+        var gfx = gameCanvas.getGraphicsContext2D();
+
+        Image iname;
+        gfx.drawImage();
+
         welcomeText.setText("Game started!");
     }
 }

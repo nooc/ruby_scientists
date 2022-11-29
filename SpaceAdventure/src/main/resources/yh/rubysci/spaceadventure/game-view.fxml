@@ -13,6 +13,6 @@
 
     <Canvas fx:id="gameCanvas" width="100" height="100" />
 
-    <Label fx:id="welcomeText"/>
+    <Label fx:id="welcomeText" text="Hello"/>
     <Button text="Start" onAction="#onStartButtonClick"/>
 </HBox>
