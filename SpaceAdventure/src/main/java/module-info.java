@@ -1,6 +1,7 @@
 module yh.rubysci.spaceadventure {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.media;
 
 
     opens yh.rubysci.spaceadventure to javafx.fxml;

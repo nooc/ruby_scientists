@@ -1,21 +1,29 @@
 package yh.rubysci.spaceadventure.logic;
 
+import javafx.scene.image.Image;
 import yh.rubysci.spaceadventure.BoardLocations;
+import yh.rubysci.spaceadventure.GameApplication;
 
 public class GameBoard {
     private int currentPosition;
-    private Location[] locations;
+    private Image boardBitmap;
 
     public GameBoard() {
-        locations = new Location[BoardLocations.LOCATIONS.length];
         currentPosition = 0;
-
-        for(int i = 0; i< locations.length; i++) {
-            locations[i] = new Location(BoardLocations.LOCATIONS[i]);
-        }
+        boardBitmap = new Image(
+                GameApplication.class.getResourceAsStream("board.png")
+        );
     }
 
     private void move(int steps) {
 
+    }
+
+    /**
+     * Test if game has finished (game piece in last location).
+     * @return
+     */
+    public boolean isFinished() {
+        return currentPosition == (BoardLocations.LOCATIONS.length - 1);
     }
 }
