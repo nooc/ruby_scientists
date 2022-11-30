@@ -14,6 +14,9 @@ public class GameController {
     protected void onStartButtonClick() {
 
         var gfx = gameCanvas.getGraphicsContext2D();
+
+
+
         welcomeText.setText("Game started!");
     }
 }
