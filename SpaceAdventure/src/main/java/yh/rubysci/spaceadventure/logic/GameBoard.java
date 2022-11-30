@@ -45,4 +45,8 @@ public class GameBoard {
     public void initialize() {
         currentPosition = 0;
     }
+
+    public Location getLocation() {
+        return BoardLocations.LOCATIONS[currentPosition];
+    }
 }

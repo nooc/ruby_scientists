@@ -1,6 +1,7 @@
 package yh.rubysci.spaceadventure;
 
 import yh.rubysci.spaceadventure.logic.Location;
+import yh.rubysci.spaceadventure.logic.gameevent.GameFinished;
 
 public final class BoardLocations {
 
@@ -41,8 +42,9 @@ public final class BoardLocations {
             new Location(0.62,0.764, null),
             new Location(0.67,0.711, null),
             new Location(0.745,0.705, null),
-            new Location(0.795,0.763, null),
+            new Location(0.795,0.763, new GameFinished()),
     };
+    public static final Location OFF_SCREEN_LOCATION = new Location(-0.1, 0.0,null);
 
     public static Location getLocation(int index) {
         return LOCATIONS[index];

@@ -1,18 +1,16 @@
 package yh.rubysci.spaceadventure;
 
-import javafx.animation.AnimationTimer;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.transform.Affine;
 import javafx.util.Duration;
 import yh.rubysci.spaceadventure.logic.Die;
 import yh.rubysci.spaceadventure.logic.GameBoard;
@@ -24,6 +22,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class GameController implements javafx.fxml.Initializable {
+    private static final double MAX_MOVE_TIME = 5;
     @FXML
     private Canvas gameCanvas;
     @FXML
@@ -34,18 +33,50 @@ public class GameController implements javafx.fxml.Initializable {
     private GameBoard gameBoard;
     private MediaPlayer diePlayer;
     private Image boardBackground;
+    private Image passiveImage;
+    private Image thrustImage1;
+    private Image thrustImage2;
     private GraphicsContext gfx;
-    private final AnimationTimer moveTimer = new AnimationTimer() {
-        @Override
-        public void handle(long l) {
-            handleMove(l);
-        }
-    };
+    private final PlayerMover mover;
+    private final Paint debugPaint;
+    private Affine transform;
+    public GameController() {
+        mover = new PlayerMover(this::onMoveFinished, this::onMoving);
+        debugPaint = Color.BLUE;
+        transform = new Affine();
+    }
+
+    private void onMoving(long now, double x, double y, double angle) {
+        drawBoard();
+        // rocket
+        var img = ((now/100000000)&1) == 0 ? thrustImage1 : thrustImage2;
+        transform.setToIdentity();
+        transform.appendTranslation(x- img.getWidth()/2, y - img.getHeight() * 0.8);
+        transform.appendRotation(angle);
+        gfx.setTransform(transform);
+        gfx.drawImage(img, 0, 0);
+    }
+    private void finishedMoving(double x, double y) {
+        drawBoard();
+        // rocket
+        transform.setToIdentity();
+        transform.appendTranslation(x- passiveImage.getWidth()/2, y - passiveImage.getHeight() * 0.8);
+        gfx.setTransform(transform);
+        gfx.drawImage(passiveImage, 0, 0);
+    }
+
+
+    private void onMoveFinished(Object payload, double x, double y) {
+        finishedMoving(x,y);
+        // TODO: stop thruster
+    }
 
     @FXML
     private void onStartButtonClick() {
         startButton.setText("Restart Game");
         gameBoard.initialize();
+        var loc = gameBoard.getLocation();
+        movePlayer(BoardLocations.OFF_SCREEN_LOCATION, loc);
     }
 
     @FXML
@@ -71,31 +102,40 @@ public class GameController implements javafx.fxml.Initializable {
         diePlayer.setAutoPlay(false);
         rollVideoView.setMediaPlayer(diePlayer);
         diePlayer.setOnEndOfMedia(() -> { doDieRoll(); });
+
         boardBackground = new Image(GameApplication.class.getResourceAsStream("board.png"));
+
+        passiveImage = new Image(GameApplication.class.getResourceAsStream("rocket_hull.png"));
+        thrustImage1 = new Image(GameApplication.class.getResourceAsStream("rocket_hull_a.png"));
+        thrustImage2 = new Image(GameApplication.class.getResourceAsStream("rocket_hull_b.png"));
 
         // Get graphics context for drawing
         gfx = gameCanvas.getGraphicsContext2D();
-
         // Draw board
         drawBoard();
-        movePlayer(null, BoardLocations.getLocation(0).getNormal());
     }
 
     private void drawBoard() {
+
         // Draw background
-        gfx.drawImage(boardBackground, 0, 0);
+        transform.setToIdentity();
+        gfx.setTransform(transform);
+        gfx.drawImage(boardBackground, 0, 0, gameCanvas.getWidth(), gameCanvas.getHeight());
     }
 
-    private void movePlayer(Point2D source, Point2D target) {
-        if(source == null) {
-            source = new Point2D(-0.2, -0.2);
-        }
-
+    private void movePlayer(Location source, Location target) {
+        // seth movement path
+        var src = source.getNormal();
+        var tgt = target.getNormal();
+        mover.move(
+                target,
+                src.distance(tgt) * MAX_MOVE_TIME,
+                src.getX() * gameCanvas.getWidth(),
+                src.getY() * gameCanvas.getHeight(),
+                tgt.getX() * gameCanvas.getWidth(),
+                tgt.getY() * gameCanvas.getHeight()
+        );
     }
-
-    private void handleMove(long l) {
-    }
-
 
     private void doDieRoll() {
         diePlayer.stop();
