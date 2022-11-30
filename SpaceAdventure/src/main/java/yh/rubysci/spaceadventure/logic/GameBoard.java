@@ -10,9 +10,10 @@ public class GameBoard {
 
     public GameBoard() {
         currentPosition = 0;
+        /*
         boardBitmap = new Image(
                 GameApplication.class.getResourceAsStream("board.png")
-        );
+        );*/
     }
 
     private void move(int steps) {
