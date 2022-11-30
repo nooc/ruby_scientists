@@ -43,4 +43,12 @@ public final class BoardLocations {
             new Location(685,536, null),
             new Location(731,580, null),
     };
+
+    public static Location getLocation(int index) {
+        return LOCATIONS[index];
+    }
+
+    public static int getCount() {
+        return LOCATIONS.length;
+    }
 }

@@ -1,22 +1,30 @@
 package yh.rubysci.spaceadventure.logic;
 
-import javafx.scene.image.Image;
 import yh.rubysci.spaceadventure.BoardLocations;
-import yh.rubysci.spaceadventure.GameApplication;
+
+import java.util.function.Consumer;
 
 public class GameBoard {
     private int currentPosition;
-    private Image boardBitmap;
+    private Consumer<IGameEvent> onGameEvent;
 
     public GameBoard() {
-        currentPosition = 0;
-        /*
-        boardBitmap = new Image(
-                GameApplication.class.getResourceAsStream("board.png")
-        );*/
+        initialize();
     }
 
-    private void move(int steps) {
+    /**
+     * Move after roll.
+     * @param steps
+     */
+    public void move(int steps) {
+
+    }
+
+    /**
+     * Move after effect.
+     * @param steps
+     */
+    public void postMove(int steps) {
 
     }
 
@@ -26,5 +34,15 @@ public class GameBoard {
      */
     public boolean isFinished() {
         return currentPosition == (BoardLocations.LOCATIONS.length - 1);
+    }
+
+    public void setOnGameEvent(Consumer<IGameEvent> onGameEvent) {
+        this.onGameEvent = onGameEvent;
+    }
+
+
+
+    public void initialize() {
+        currentPosition = 0;
     }
 }

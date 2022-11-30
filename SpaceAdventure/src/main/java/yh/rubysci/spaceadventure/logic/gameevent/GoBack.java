@@ -1,9 +1,15 @@
 package yh.rubysci.spaceadventure.logic.gameevent;
 
-public class GoBack extends NegativeEventBase{
+public class GoBack extends NegativeEventBase {
+    private int steps;
+
+    public GoBack(int steps) {
+        this.steps = steps;
+    }
+
     @Override
     public int getMovementOffset() {
-        return 0;
+        return steps;
     }
 
     @Override
