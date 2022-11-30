@@ -1,6 +1,8 @@
 package yh.rubysci.spaceadventure.logic.gameevent;
 
 public class MoveForward extends PositiveEventBase {
+
+    private int steps
     @Override
     public int getMovementOffset() {
         return 0;
