@@ -6,34 +6,24 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.util.Duration;
 
 public class PlayerMover {
 
-    public interface InterpolationHandler {
-        void currentValue(long now, double x, double y, double angle);
-    }
-    public interface FinishedHandler {
-        void handleMoveFinisdhed(Object payload, double x, double y);
-    }
-
     private static final double FPS = 10;
-    private DoubleProperty xPos;
-    private DoubleProperty yPos;
-    private DoubleProperty angle;
-    private Timeline timeline;
     private final AnimationTimer timer;
     private final FinishedHandler finishedHandler;
     private final InterpolationHandler movementHandler;
-
+    private final DoubleProperty xPos;
+    private final DoubleProperty yPos;
+    private final DoubleProperty angle;
+    private Timeline timeline;
     public PlayerMover(FinishedHandler finishedHandler, InterpolationHandler movementHandler) {
         this.finishedHandler = finishedHandler;
         this.movementHandler = movementHandler;
-        xPos  = new SimpleDoubleProperty();
-        yPos  = new SimpleDoubleProperty();
-        angle  = new SimpleDoubleProperty();
+        xPos = new SimpleDoubleProperty();
+        yPos = new SimpleDoubleProperty();
+        angle = new SimpleDoubleProperty();
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -42,7 +32,7 @@ public class PlayerMover {
         };
     }
 
-    public void move(Object payload, double seconds, double x0, double y0, double x1, double y1) {
+    public void move(String moveType, double seconds, double x0, double y0, double x1, double y1) {
         double tilt = 45; // TODO: calculate tilt
         var key0 = new KeyFrame(
                 Duration.ZERO,
@@ -51,7 +41,7 @@ public class PlayerMover {
                 new KeyValue(angle, 0)
         );
         var key1 = new KeyFrame(
-                Duration.seconds(seconds/2),
+                Duration.seconds(seconds / 2),
                 new KeyValue(angle, tilt)
         );
         var key2 = new KeyFrame(
@@ -63,9 +53,17 @@ public class PlayerMover {
         timeline = new Timeline(key0, key1, key2);
         timeline.setOnFinished(evt -> {
             timer.stop();
-            finishedHandler.handleMoveFinisdhed(payload, x1, y1);
+            finishedHandler.handleMoveFinisdhed(moveType, x1, y1);
         });
         timeline.play();
         timer.start();
+    }
+
+    public interface InterpolationHandler {
+        void currentValue(long now, double x, double y, double angle);
+    }
+
+    public interface FinishedHandler {
+        void handleMoveFinisdhed(String moveType, double x, double y);
     }
 }

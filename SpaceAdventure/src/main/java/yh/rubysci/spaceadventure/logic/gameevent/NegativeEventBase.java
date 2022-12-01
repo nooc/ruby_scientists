@@ -4,7 +4,7 @@ import yh.rubysci.spaceadventure.logic.IGameEvent;
 
 public abstract class NegativeEventBase implements IGameEvent {
     @Override
-    public String getEventSoundId() {
+    public String getEventSoundId(int roll) {
         return "negative";
     }
 }

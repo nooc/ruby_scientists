@@ -1,6 +1,7 @@
 package yh.rubysci.spaceadventure.logic;
 
 import yh.rubysci.spaceadventure.BoardLocations;
+import yh.rubysci.spaceadventure.logic.gameevent.WinOn3x6;
 
 import java.util.function.Consumer;
 
@@ -16,48 +17,94 @@ public class GameBoard {
     }
 
     /**
-     * Move after roll.
+     * Handle die roll.
+     *
      * @param die
      */
     public void handleRoll(int die) {
-        consecutiveSpecial = (die == SPECIAL_DIE_VALUE) ? consecutiveSpecial+1 : 0;
+        // fix initial
+        if (currentPosition < 0) currentPosition = 0;
+        // test for 3x6
+        consecutiveSpecial = (die == SPECIAL_DIE_VALUE) ? consecutiveSpecial + 1 : 0;
+        // last index on the board
         var lastIndex = BoardLocations.getLastIndex();
-        currentPosition += die;
-        if(currentPosition > lastIndex) {
-            currentPosition -= currentPosition % lastIndex;
+        currentPosition += die; // new position
+        // fix overflow
+        if (currentPosition > lastIndex) {
+            currentPosition = 2 * lastIndex - currentPosition;
         }
-        if(currentPosition == lastIndex || consecutiveSpecial >= SPECIAL_WIN_COUNT) {
-            currentPosition = BoardLocations.getLastIndex();
-            onGameEvent.accept(BoardLocations.getLocation(lastIndex).getEvent());
+        // test for special
+        if (consecutiveSpecial == SPECIAL_WIN_COUNT) {
+            onGameEvent.accept(new WinOn3x6());
         } else {
+            // continue
             onGameEvent.accept(BoardLocations.getLocation(currentPosition).getEvent());
         }
     }
 
     /**
-     * Post move wont trigger events.
+     * Post move wont trigger events unless on last location.
+     *
      * @param steps
      */
     public void postMove(int steps) {
-        var lastIndex = BoardLocations.getLastIndex();
-        currentPosition += steps;
-        if(currentPosition > lastIndex) {
-            currentPosition -= (lastIndex-currentPosition);
-        } else if(currentPosition < 0) {
-            currentPosition += currentPosition*(-1);
+        currentPosition = getIndexWithOffset(steps);
+        if (currentPosition == BoardLocations.getLastIndex()) {
+            onGameEvent.accept(BoardLocations.getLocation(currentPosition).getEvent());
         }
     }
 
+    /**
+     * set the event handler
+     *
+     * @param onGameEvent
+     */
     public void setOnGameEvent(Consumer<IGameEvent> onGameEvent) {
         this.onGameEvent = onGameEvent;
     }
 
+    /**
+     * initialoze to starting state
+     */
     public void initialize() {
-        currentPosition = 0;
+        currentPosition = -1;
         consecutiveSpecial = 0;
     }
 
+    /**
+     * get current location
+     *
+     * @return
+     */
     public Location getLocation() {
-        return BoardLocations.getLocation(currentPosition);
+        return getLocation(currentPosition);
+    }
+
+    /**
+     * get specific location
+     *
+     * @param position
+     * @return
+     */
+    public Location getLocation(int position) {
+        return position < 0 ? BoardLocations.OFF_SCREEN_LOCATION : BoardLocations.getLocation(position);
+    }
+
+    /**
+     * get location index with offset.
+     * Will bounce on bounds.
+     *
+     * @param offset
+     * @return offset
+     */
+    public int getIndexWithOffset(int offset) {
+        var lastIndex = BoardLocations.getLastIndex();
+        var pos = currentPosition + offset;
+        if (pos > lastIndex) {
+            pos -= (lastIndex - currentPosition);
+        } else if (pos < 0) {
+            pos += pos * (-1);
+        }
+        return pos;
     }
 }
