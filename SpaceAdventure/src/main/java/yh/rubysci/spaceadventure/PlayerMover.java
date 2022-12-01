@@ -30,8 +30,18 @@ public class PlayerMover {
         };
     }
 
+    /**
+     * Initiate a timed transform for ship.
+     *
+     * @param moveType String type passed to event handler.
+     * @param seconds Number of seconds to animate.
+     * @param x0 Starting x.
+     * @param y0 Starting y.
+     * @param x1
+     * @param y1
+     */
     public void move(String moveType, double seconds, double x0, double y0, double x1, double y1) {
-        double tilt = 45; // TODO: calculate tilt
+        double tilt = x1>x0 ? 45 : -45; // calculate tilt
         var key0 = new KeyFrame(
                 Duration.ZERO,
                 new KeyValue(xPos, x0),
