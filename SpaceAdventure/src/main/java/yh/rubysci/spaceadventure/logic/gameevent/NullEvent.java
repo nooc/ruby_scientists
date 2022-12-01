@@ -2,11 +2,7 @@ package yh.rubysci.spaceadventure.logic.gameevent;
 
 import yh.rubysci.spaceadventure.logic.IGameEvent;
 
-public class GameFinished implements IGameEvent {
-    @Override
-    public String getEventSoundId() {
-        return "finished";
-    }
+public class NullEvent extends NeutralEventBase {
 
     @Override
     public int getMovementOffset() {
@@ -15,6 +11,6 @@ public class GameFinished implements IGameEvent {
 
     @Override
     public String getEventMessage() {
-        return "Finished!";
+        return null;
     }
 }
