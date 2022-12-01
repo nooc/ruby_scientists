@@ -128,12 +128,12 @@ public class GameController implements javafx.fxml.Initializable {
         var src = source.getNormal();
         var tgt = target.getNormal();
         mover.move(
-                target,
-                src.distance(tgt) * MAX_MOVE_TIME,
-                src.getX() * gameCanvas.getWidth(),
-                src.getY() * gameCanvas.getHeight(),
-                tgt.getX() * gameCanvas.getWidth(),
-                tgt.getY() * gameCanvas.getHeight()
+            target,
+            src.distance(tgt) * MAX_MOVE_TIME,
+            src.getX() * gameCanvas.getWidth(),
+            src.getY() * gameCanvas.getHeight(),
+            tgt.getX() * gameCanvas.getWidth(),
+            tgt.getY() * gameCanvas.getHeight()
         );
     }
 
@@ -141,12 +141,14 @@ public class GameController implements javafx.fxml.Initializable {
         diePlayer.stop();
         diePlayer.seek(Duration.ZERO);
         var steps = Die.roll();
-        gameBoard.move(steps);
+        gameBoard.handleRoll(steps);
     }
 
     private void onGameEventHandler(IGameEvent event) {
-        //TODO: Play sound
-        var soundId = event.getEventSoundId();
+        var sound = GameSounds.getSingleton().getSound(event.getEventSoundId());
+        if(sound!=null) {
+            sound.play();
+        }
 
         //TODO: Show message
         var message = event.getEventMessage();
