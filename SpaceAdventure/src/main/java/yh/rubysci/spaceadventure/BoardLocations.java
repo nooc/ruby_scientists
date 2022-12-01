@@ -48,6 +48,7 @@ public final class BoardLocations {
     };
 
     public static Location getLocation(int index) {
+
         return index == (-1) ? OFF_SCREEN_LOCATION : LOCATIONS[index];
     }
 

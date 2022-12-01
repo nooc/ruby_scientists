@@ -9,8 +9,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.util.Duration;
 
 public class PlayerMover {
-
-    private static final double FPS = 10;
     private final AnimationTimer timer;
     private final FinishedHandler finishedHandler;
     private final InterpolationHandler movementHandler;

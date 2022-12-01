@@ -129,7 +129,7 @@ public class GameController implements javafx.fxml.Initializable {
         // sounds
         thrustSound = GameSounds.getSingleton().getSound("thruster");
         music = GameSounds.getSingleton().getMusic();
-        music.setVolume(0.5);
+        music.setVolume(0.1);
 
         // Get graphics context for drawing
         gfx = gameCanvas.getGraphicsContext2D();

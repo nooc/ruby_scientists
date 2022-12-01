@@ -101,9 +101,9 @@ public class GameBoard {
         var lastIndex = BoardLocations.getLastIndex();
         var pos = currentPosition + offset;
         if (pos > lastIndex) {
-            pos -= (lastIndex - currentPosition);
+            pos = lastIndex*2 - pos;
         } else if (pos < 0) {
-            pos += pos * (-1);
+            pos = -pos;
         }
         return pos;
     }
