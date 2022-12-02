@@ -123,6 +123,8 @@ public class GameController implements javafx.fxml.Initializable {
     @FXML
     private void onStartButtonClick() {
         rollCount = 0;
+        postMove = 0;
+        lastRolled = 0;
         startButton.setText("Restart Game");
         setButtonStates(GameButtonState.Working);
         gameBoard.initialize();
