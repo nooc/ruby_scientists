@@ -11,16 +11,16 @@
 <?import javafx.scene.media.MediaView?>
 <?import javafx.scene.text.Font?>
 
-<HBox xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="yh.rubysci.spaceadventure.GameController">
+<HBox maxHeight="720.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="yh.rubysci.spaceadventure.GameController">
     <Canvas fx:id="gameCanvas" height="720" width="872" />
     <VBox>
         <VBox alignment="TOP_CENTER" spacing="20.0">
-            <Label alignment="TOP_LEFT" contentDisplay="CENTER" prefHeight="32.0" prefWidth="153.0" text="Space Adventure" textFill="#1b35c4" textOverrun="CLIP">
+            <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="Space Adventure" textFill="#1b35c4" textOverrun="CLIP">
                 <HBox.margin>
                     <Insets left="50.0" top="10.0" />
                 </HBox.margin>
                 <font>
-                    <Font name="System Bold" size="22.0" />
+                    <Font name="Comic Sans MS Bold" size="22.0" />
                 </font>
             </Label>
             <Button fx:id="startButton" onAction="#onStartButtonClick" text="Start Game" textFill="#1b35c4">
@@ -28,14 +28,14 @@
                     <Insets left="-130.0" top="50.0" />
                 </HBox.margin>
                 <font>
-                    <Font name="System Bold" size="15.0" />
+                    <Font name="Arial Bold" size="15.0" />
                 </font></Button>
             <Button onAction="#onQuitButtonClick" text="Quit" textFill="#ae1717">
                 <HBox.margin>
                     <Insets left="-70.0" top="100.0" />
                 </HBox.margin>
                 <font>
-                    <Font name="Arimo Bold Italic" size="15.0" />
+                    <Font name="Arial Bold" size="15.0" />
                 </font></Button>
          <HBox spacing="30.0">
             <HBox.margin>
@@ -50,22 +50,33 @@
                      <Insets />
                   </HBox.margin>
                </Label>
-               <Slider maxHeight="1.7976931348623157E308" />
+               <Slider fx:id="volumeSlider" value="100.0" />
             </children>
+            <VBox.margin>
+               <Insets left="10.0" right="10.0" />
+            </VBox.margin>
          </HBox>
         </VBox>
 
         <VBox alignment="CENTER" spacing="10.0">
             <MediaView fx:id="rollVideoView" fitHeight="96" fitWidth="96" />
-            <Button fx:id="rollButton" alignment="CENTER" onAction="#onRollButtonClick" text="Roll Die" textFill="#e14d13">
+            <Button fx:id="rollButton" alignment="CENTER" graphicTextGap="0.0" onAction="#onRollButtonClick" prefWidth="96.0" text="Roll Die" textFill="#e14d13">
                 <HBox.margin>
                     <Insets />
                 </HBox.margin>
                 <font>
-                    <Font name="System Bold" size="25.0" />
+                    <Font name="System Bold" size="18.0" />
                 </font></Button>
+         <VBox.margin>
+            <Insets bottom="20.0" />
+         </VBox.margin>
         </VBox>
+      <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Roll Log" textFill="#1b35c4">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Label>
 
-        <ListView fx:id="rollLog" maxWidth="-Infinity" VBox.vgrow="ALWAYS" />
+        <ListView fx:id="rollLog" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS" />
     </VBox>
 </HBox>
