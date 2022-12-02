@@ -27,11 +27,11 @@ public class GameBoard {
         // test for 3x6
         consecutiveSpecial = (die == SPECIAL_DIE_VALUE) ? consecutiveSpecial + 1 : 0;
         // last index on the board
-        var lastIndex = BoardLocations.getLastIndex();
+        var maxIndex = BoardLocations.getMaxIndex();
         currentPosition += die; // new position
         // fix overflow
-        if (currentPosition > lastIndex) {
-            currentPosition = 2 * lastIndex - currentPosition;
+        if (currentPosition > maxIndex) {
+            currentPosition = 2 * maxIndex - currentPosition;
         }
         // test for special
         if (consecutiveSpecial == SPECIAL_WIN_COUNT) {
@@ -43,13 +43,13 @@ public class GameBoard {
     }
 
     /**
-     * Post move wont trigger events unless on last location.
+     * Post move won't trigger events unless on last location.
      *
      * @param steps
      */
     public void postMove(int steps) {
         currentPosition = getIndexWithOffset(steps);
-        if (currentPosition == BoardLocations.getLastIndex()) {
+        if (currentPosition == BoardLocations.getMaxIndex()) {
             onGameEvent.accept(BoardLocations.getLocation(currentPosition).getEvent());
         }
     }
@@ -64,7 +64,7 @@ public class GameBoard {
     }
 
     /**
-     * initialoze to starting state
+     * Initialize to starting state
      */
     public void initialize() {
         currentPosition = -1;
@@ -91,20 +91,20 @@ public class GameBoard {
     }
 
     /**
-     * get location index with offset.
+     * Get new index with offset applied.
      * Will bounce on bounds.
      *
      * @param offset
      * @return offset
      */
     public int getIndexWithOffset(int offset) {
-        var lastIndex = BoardLocations.getLastIndex();
-        var pos = currentPosition + offset;
-        if (pos > lastIndex) {
-            pos = lastIndex*2 - pos;
-        } else if (pos < 0) {
-            pos = -pos;
+        var maxIndex = BoardLocations.getMaxIndex();
+        var newIndex = currentPosition + offset;
+        if (newIndex > maxIndex) {
+            newIndex = maxIndex*2 - newIndex;
+        } else if (newIndex < 0) {
+            newIndex = -newIndex;
         }
-        return pos;
+        return newIndex;
     }
 }

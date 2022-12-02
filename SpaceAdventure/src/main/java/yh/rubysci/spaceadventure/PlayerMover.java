@@ -61,7 +61,7 @@ public class PlayerMover {
         timeline = new Timeline(key0, key1, key2);
         timeline.setOnFinished(evt -> {
             timer.stop();
-            finishedHandler.handleMoveFinisdhed(moveType, x1, y1);
+            finishedHandler.handleMoveFinished(moveType, x1, y1);
         });
         timeline.play();
         timer.start();
@@ -72,6 +72,6 @@ public class PlayerMover {
     }
 
     public interface FinishedHandler {
-        void handleMoveFinisdhed(String moveType, double x, double y);
+        void handleMoveFinished(String moveType, double x, double y);
     }
 }
