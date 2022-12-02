@@ -1,11 +1,14 @@
 package yh.rubysci.spaceadventure;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
@@ -23,6 +26,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class GameController implements javafx.fxml.Initializable {
+    private static final double MAX_MUSIC_VOLUME = 0.3;
     private static final double MAX_MOVE_TIME = 5;
     private static final String MOVE_NORMAL = "normal";
     private static final String MOVE_POST = "post";
@@ -37,6 +41,8 @@ public class GameController implements javafx.fxml.Initializable {
     private MediaView rollVideoView;
     @FXML
     private ListView<String> rollLog;
+    @FXML
+    private Slider volumeSlider;
 
     private final PlayerMover mover;
     private GameBoard gameBoard;
@@ -49,6 +55,8 @@ public class GameController implements javafx.fxml.Initializable {
     private GraphicsContext gfx;
     private int postMove;
     private int lastRolled;
+    private int rollCount;
+    private double soundFxVolume;
     private AudioClip thrustSound;
     private final Affine transform;
     private GameMessage gameMessage;
@@ -63,6 +71,9 @@ public class GameController implements javafx.fxml.Initializable {
         transform = new Affine();
         // post move steps
         postMove = 0;
+        // fx volume
+        soundFxVolume = 1;
+        rollCount = 0;
     }
 
     /**
@@ -111,6 +122,7 @@ public class GameController implements javafx.fxml.Initializable {
      */
     @FXML
     private void onStartButtonClick() {
+        rollCount = 0;
         startButton.setText("Restart Game");
         setButtonStates(GameButtonState.Working);
         gameBoard.initialize();
@@ -143,6 +155,15 @@ public class GameController implements javafx.fxml.Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        // slider
+        volumeSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> value, Number oldValue, Number newValue) {
+                setMasterVolume(newValue.doubleValue()/100);
+            }
+        });
+
+        // buttons
         setButtonStates(GameButtonState.Initial);
 
         // create board
@@ -169,7 +190,7 @@ public class GameController implements javafx.fxml.Initializable {
         // sounds
         thrustSound = GameSounds.getSingleton().getSound("thruster");
         music = GameSounds.getSingleton().getMusic();
-        music.setVolume(0.1);
+        music.setVolume(MAX_MUSIC_VOLUME);
 
         // Get graphics context for drawing
         gfx = gameCanvas.getGraphicsContext2D();
@@ -179,6 +200,17 @@ public class GameController implements javafx.fxml.Initializable {
 
         // Draw board
         drawBoard();
+    }
+
+    /**
+     * Set game volume.
+     *
+     * @param v
+     */
+    private void setMasterVolume(double v) {
+        soundFxVolume = v;
+        music.setVolume(v * MAX_MUSIC_VOLUME);
+        diePlayer.setVolume(soundFxVolume);
     }
 
     /**
@@ -218,7 +250,7 @@ public class GameController implements javafx.fxml.Initializable {
                     targetY
             );
             // start playing thruster
-            thrustSound.play();
+            thrustSound.play(soundFxVolume);
         } else {
             // target is same
             onMoveFinished(moveType, targetX, targetY);
@@ -254,7 +286,7 @@ public class GameController implements javafx.fxml.Initializable {
         // roll
         lastRolled = Die.roll();
         // log roll
-        rollLog.getItems().add("Rolled a " + lastRolled);
+        rollLog.getItems().add((++rollCount) + ": Rolled a " + lastRolled);
         // initiate move
         movePlayer("normal",
                 BoardLocations.getLocation(gameBoard.getIndexWithOffset(lastRolled))
@@ -270,11 +302,11 @@ public class GameController implements javafx.fxml.Initializable {
         // play event sound
         var sound = GameSounds.getSingleton().getSound(event.getEventSoundId(lastRolled));
         if (sound != null) {
-            sound.play();
+            sound.play(soundFxVolume);
         }
         // show event message
         if(event.hasMessage(lastRolled)) {
-            gameMessage.showMessage(event,lastRolled, evt -> { });
+            gameMessage.showMessage(event, lastRolled);
         }
         // test if this is a GameFinished event
         if (event instanceof GameFinished) {
