@@ -14,7 +14,7 @@ public class MoveForward extends PositiveEventBase {
 
     @Override
     public String getEventMessage(int roll) {
-        return "Yuo found a wormhole. Move forward "+steps+" steps!";
+        return "Yuo found a wormhole. Move forward " + steps + " steps!";
     }
 
     @Override

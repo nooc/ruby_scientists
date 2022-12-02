@@ -101,7 +101,7 @@ public class GameBoard {
         var maxIndex = BoardLocations.getMaxIndex();
         var newIndex = currentPosition + offset;
         if (newIndex > maxIndex) {
-            newIndex = maxIndex*2 - newIndex;
+            newIndex = maxIndex * 2 - newIndex;
         } else if (newIndex < 0) {
             newIndex = -newIndex;
         }

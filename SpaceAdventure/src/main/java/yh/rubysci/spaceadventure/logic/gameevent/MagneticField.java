@@ -29,6 +29,6 @@ public class MagneticField extends NeutralEventBase {
     }
 
     private boolean isNegative(int roll) {
-        return roll%2 == 1;
+        return roll % 2 == 1;
     }
 }

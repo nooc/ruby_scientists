@@ -14,7 +14,7 @@ public class GoBack extends NegativeEventBase {
 
     @Override
     public String getEventMessage(int roll) {
-        return "The pull of a black hole has thrown you back "+steps+" steps.";
+        return "The pull of a black hole has thrown you back " + steps + " steps.";
     }
 
     @Override

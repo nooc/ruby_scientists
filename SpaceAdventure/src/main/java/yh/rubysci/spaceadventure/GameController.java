@@ -5,7 +5,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Slider;
@@ -31,6 +30,8 @@ public class GameController implements javafx.fxml.Initializable {
     private static final String MOVE_NORMAL = "normal";
     private static final String MOVE_POST = "post";
     private static final double ADJUST_PLAYER_HEIGHT_MULTIPLIER = 0.8;
+    private final PlayerMover mover;
+    private final Affine transform;
     @FXML
     private Canvas gameCanvas;
     @FXML
@@ -43,8 +44,6 @@ public class GameController implements javafx.fxml.Initializable {
     private ListView<String> rollLog;
     @FXML
     private Slider volumeSlider;
-
-    private final PlayerMover mover;
     private GameBoard gameBoard;
     private MediaPlayer diePlayer;
     private MediaPlayer music;
@@ -58,7 +57,6 @@ public class GameController implements javafx.fxml.Initializable {
     private int rollCount;
     private double soundFxVolume;
     private AudioClip thrustSound;
-    private final Affine transform;
     private GameMessage gameMessage;
 
     /**
@@ -78,9 +76,10 @@ public class GameController implements javafx.fxml.Initializable {
 
     /**
      * Movement handler. Called for every movement frame.
-     * @param now Current time in nanoseconds
-     * @param x Current x position
-     * @param y Current Y position
+     *
+     * @param now   Current time in nanoseconds
+     * @param x     Current x position
+     * @param y     Current Y position
      * @param angle Current tilt angle
      */
     private void onMoving(long now, double x, double y, double angle) {
@@ -161,7 +160,7 @@ public class GameController implements javafx.fxml.Initializable {
         volumeSlider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> value, Number oldValue, Number newValue) {
-                setMasterVolume(newValue.doubleValue()/100);
+                setMasterVolume(newValue.doubleValue() / 100);
             }
         });
 
@@ -229,7 +228,7 @@ public class GameController implements javafx.fxml.Initializable {
      * Initiate player movement.
      *
      * @param moveType Type string
-     * @param target Target location
+     * @param target   Target location
      */
     private void movePlayer(String moveType, Location target) {
         // get current location
@@ -298,6 +297,7 @@ public class GameController implements javafx.fxml.Initializable {
     /**
      * This handler is called from GameBoard in GameBoard.handleRoll()
      * with a game event argument.
+     *
      * @param event Game event to handle.
      */
     private void onGameEventHandler(IGameEvent event) {
@@ -307,7 +307,7 @@ public class GameController implements javafx.fxml.Initializable {
             sound.play(soundFxVolume);
         }
         // show event message
-        if(event.hasMessage(lastRolled)) {
+        if (event.hasMessage(lastRolled)) {
             gameMessage.showMessage(event, lastRolled);
         }
         // test if this is a GameFinished event
@@ -339,6 +339,7 @@ public class GameController implements javafx.fxml.Initializable {
 
     /**
      * Set button states
+     *
      * @param state Game button state
      */
     private void setButtonStates(GameButtonState state) {

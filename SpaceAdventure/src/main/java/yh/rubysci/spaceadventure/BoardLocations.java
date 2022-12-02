@@ -27,7 +27,7 @@ public final class BoardLocations {
             new Location(0.349, 0.634, NULL_EVT),
             new Location(0.426, 0.595, new WildCardEvent()), // 18
             new Location(0.496, 0.533, NULL_EVT),
-            new Location(0.558, 0.459, new MagneticField() ), // 20
+            new Location(0.558, 0.459, new MagneticField()), // 20
             new Location(0.622, 0.412, NULL_EVT),
             new Location(0.693, 0.386, NULL_EVT),
             new Location(0.765, 0.413, NULL_EVT),
