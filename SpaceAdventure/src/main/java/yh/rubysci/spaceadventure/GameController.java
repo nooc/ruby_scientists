@@ -24,9 +24,6 @@ import java.util.ResourceBundle;
 
 public class GameController implements javafx.fxml.Initializable {
     private static final double MAX_MOVE_TIME = 5;
-    private static final int BUTTON_STATE_INITIAL = 0;
-    private static final int BUTTON_STATE_WORKING = 1;
-    private static final int BUTTON_STATE_IDLE = 2;
     private static final String MOVE_NORMAL = "normal";
     private static final String MOVE_POST = "post";
     private static final double ADJUST_PLAYER_HEIGHT_MULTIPLIER = 0.8;
@@ -54,7 +51,7 @@ public class GameController implements javafx.fxml.Initializable {
     private int lastRolled;
     private AudioClip thrustSound;
     private final Affine transform;
-    private final Alert gameMessage;
+    private GameMessage gameMessage;
 
     /**
      * Default constructor
@@ -66,8 +63,6 @@ public class GameController implements javafx.fxml.Initializable {
         transform = new Affine();
         // post move steps
         postMove = 0;
-        // game alerts
-        gameMessage = new Alert(Alert.AlertType.INFORMATION);
     }
 
     /**
@@ -117,7 +112,7 @@ public class GameController implements javafx.fxml.Initializable {
     @FXML
     private void onStartButtonClick() {
         startButton.setText("Restart Game");
-        setButtonStates(BUTTON_STATE_WORKING);
+        setButtonStates(GameButtonState.Working);
         gameBoard.initialize();
         music.play();
         movePlayer("normal", gameBoard.getLocation(0));
@@ -136,7 +131,7 @@ public class GameController implements javafx.fxml.Initializable {
      */
     @FXML
     private void onRollButtonClick() {
-        setButtonStates(BUTTON_STATE_WORKING);
+        setButtonStates(GameButtonState.Working);
         diePlayer.play();
     }
 
@@ -148,7 +143,7 @@ public class GameController implements javafx.fxml.Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        setButtonStates(BUTTON_STATE_INITIAL);
+        setButtonStates(GameButtonState.Initial);
 
         // create board
         gameBoard = new GameBoard();
@@ -162,18 +157,26 @@ public class GameController implements javafx.fxml.Initializable {
         diePlayer.setOnEndOfMedia(() -> {
             doDieRoll(); // end of play event
         });
+
         // background image
         boardBackground = new Image(GameApplication.class.getResourceAsStream("board.png"));
+
         // player images
         passiveImage = new Image(GameApplication.class.getResourceAsStream("rocket_hull.png"));
         thrustImage1 = new Image(GameApplication.class.getResourceAsStream("rocket_hull_a.png"));
         thrustImage2 = new Image(GameApplication.class.getResourceAsStream("rocket_hull_b.png"));
+
         // sounds
         thrustSound = GameSounds.getSingleton().getSound("thruster");
         music = GameSounds.getSingleton().getMusic();
         music.setVolume(0.1);
+
         // Get graphics context for drawing
         gfx = gameCanvas.getGraphicsContext2D();
+
+        // game alerts
+        gameMessage = new GameMessage(gameCanvas);
+
         // Draw board
         drawBoard();
     }
@@ -197,28 +200,36 @@ public class GameController implements javafx.fxml.Initializable {
     private void movePlayer(String moveType, Location target) {
         // get current location
         Location source = gameBoard.getLocation();
+        // get target location
+        var targetPointN = target.getNormal();
+        var targetX = targetPointN.getX() * gameCanvas.getWidth();
+        var targetY = targetPointN.getY() * gameCanvas.getHeight();
+        // move if different
         if (source != target) {
             // seth movement path
             var src = source.getNormal();
-            var tgt = target.getNormal();
             // start moving
             mover.move(
                     moveType,
-                    src.distance(tgt) * MAX_MOVE_TIME,
+                    src.distance(targetPointN) * MAX_MOVE_TIME,
                     src.getX() * gameCanvas.getWidth(), // normals to actual canvas coordinates
                     src.getY() * gameCanvas.getHeight(),
-                    tgt.getX() * gameCanvas.getWidth(),
-                    tgt.getY() * gameCanvas.getHeight()
+                    targetX,
+                    targetY
             );
             // start playing thruster
             thrustSound.play();
+        } else {
+            // target is same
+            onMoveFinished(moveType, targetX, targetY);
         }
     }
 
     /**
      * Finished moving handler.
      * Calls game logic.
-     * @param moveType
+     *
+     * @param moveType The event type passed
      * @param x
      * @param y
      */
@@ -232,60 +243,78 @@ public class GameController implements javafx.fxml.Initializable {
         }
     }
 
+    /**
+     * Called when roll video finishes.
+     * Does actual roll.
+     */
     private void doDieRoll() {
+        // stop video and reset time
         diePlayer.stop();
         diePlayer.seek(Duration.ZERO);
+        // roll
         lastRolled = Die.roll();
+        // log roll
         rollLog.getItems().add("Rolled a " + lastRolled);
+        // initiate move
         movePlayer("normal",
                 BoardLocations.getLocation(gameBoard.getIndexWithOffset(lastRolled))
         );
     }
 
+    /**
+     * This handler is called from GameBoard in GameBoard.handleRoll()
+     * with a game event argument.
+     * @param event Game event to handle.
+     */
     private void onGameEventHandler(IGameEvent event) {
+        // play event sound
         var sound = GameSounds.getSingleton().getSound(event.getEventSoundId(lastRolled));
         if (sound != null) {
             sound.play();
         }
-
+        // show event message
         if(event.hasMessage(lastRolled)) {
-            gameMessage.setTitle(event.getEventTitle(lastRolled));
-            gameMessage.setContentText(event.getEventMessage(lastRolled));
-            gameMessage.setOnHiding(evt -> {
-                setButtonStates(BUTTON_STATE_IDLE);
-            });
-            gameMessage.show();
+            gameMessage.showMessage(event,lastRolled, evt -> { });
         }
-
+        // test if this is a GameFinished event
         if (event instanceof GameFinished) {
             finishGame(event);
-            setButtonStates(BUTTON_STATE_INITIAL);
-            return;
+            setButtonStates(GameButtonState.Initial);
         } else {
+            // handle anything else here
             postMove = event.getMovementOffset(lastRolled);
             if (postMove != 0) {
                 movePlayer(MOVE_POST,
                         BoardLocations.getLocation(gameBoard.getIndexWithOffset(postMove))
                 );
             }
+            setButtonStates(GameButtonState.Idle);
         }
-        setButtonStates(BUTTON_STATE_IDLE);
     }
 
+    /**
+     * Finish game.
+     *
+     * @param event Game event
+     */
     private void finishGame(IGameEvent event) {
-        setButtonStates(BUTTON_STATE_INITIAL);
+        setButtonStates(GameButtonState.Initial);
         music.stop();
         rollLog.getItems().add("Game won!");
     }
 
-    private void setButtonStates(int buttonsState) {
-        if (buttonsState == BUTTON_STATE_INITIAL) {
+    /**
+     * Set button states
+     * @param state Game button state
+     */
+    private void setButtonStates(GameButtonState state) {
+        if (state.equals(GameButtonState.Initial)) {
             rollButton.setDisable(true);
             startButton.setDisable(false);
-        } else if (buttonsState == BUTTON_STATE_WORKING) {
+        } else if (state.equals(GameButtonState.Working)) {
             rollButton.setDisable(true);
             startButton.setDisable(true);
-        } else if (buttonsState == BUTTON_STATE_IDLE) {
+        } else if (state.equals(GameButtonState.Idle)) {
             rollButton.setDisable(false);
             startButton.setDisable(false);
         }

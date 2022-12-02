@@ -52,7 +52,7 @@ public final class BoardLocations {
         return index == (-1) ? OFF_SCREEN_LOCATION : LOCATIONS[index];
     }
 
-    public static int getLastIndex() {
+    public static int getMaxIndex() {
         return LOCATIONS.length - 1;
     }
 }
