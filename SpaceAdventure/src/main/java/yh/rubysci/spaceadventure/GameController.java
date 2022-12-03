@@ -3,6 +3,7 @@ package yh.rubysci.spaceadventure;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
@@ -30,6 +31,10 @@ public class GameController implements javafx.fxml.Initializable {
     private static final String MOVE_NORMAL = "normal";
     private static final String MOVE_POST = "post";
     private static final double ADJUST_PLAYER_HEIGHT_MULTIPLIER = 0.8;
+    private static final double TEXT_START_X = 0;
+    private static final double TEXT_START_Y = 0;
+    private static final double TEXT_END_X = 100;
+    private static final double TEXT_END_Y = 100;
     private final PlayerMover mover;
     private final Affine transform;
     @FXML
@@ -197,7 +202,9 @@ public class GameController implements javafx.fxml.Initializable {
         gfx = gameCanvas.getGraphicsContext2D();
 
         // game alerts
-        gameMessage = new GameMessage(gameCanvas);
+        gameMessage = new GameMessage(gameCanvas,
+                new Point2D(TEXT_START_X, TEXT_START_Y),
+                new Point2D(TEXT_END_X, TEXT_END_Y));
 
         // Draw board
         drawBoard();
