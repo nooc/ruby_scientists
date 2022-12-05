@@ -11,7 +11,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.media.AudioClip;
-import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.scene.transform.Affine;
@@ -31,11 +30,12 @@ public class GameController implements javafx.fxml.Initializable {
     private static final String MOVE_NORMAL = "normal";
     private static final String MOVE_POST = "post";
     private static final double ADJUST_PLAYER_HEIGHT_MULTIPLIER = 0.8;
-    private static final double TEXT_START_X = 0;
-    private static final double TEXT_START_Y = 0;
-    private static final double TEXT_END_X = 100;
-    private static final double TEXT_END_Y = 100;
-    private final PlayerMover mover;
+    private static final double TEXT_START_X = 0.1;
+    private static final double TEXT_START_Y = 0.7;
+    private static final double TEXT_END_X = 0.1;
+    private static final double TEXT_END_Y = 1;
+    private final AnimationManager animationManager;
+    private final PlayerMover playerMover;
     private final Affine transform;
     @FXML
     private Canvas gameCanvas;
@@ -64,12 +64,19 @@ public class GameController implements javafx.fxml.Initializable {
     private AudioClip thrustSound;
     private GameMessage gameMessage;
 
+    private double playerX, playerY, playerTilt;
+    private Image playerImage;
+
     /**
      * Default constructor
      */
     public GameController() {
+        // global animation manager
+        animationManager = AnimationManager.getSingleton();
+        animationManager.setPreAnimationFrame(this::drawBoard);
+        animationManager.setPostAnimationFrame(this::drawPlayer);
         // create mover with handlers
-        mover = new PlayerMover(this::onMoveFinished, this::onMoving);
+        playerMover = new PlayerMover(animationManager, this::onMoveFinished, this::onMoving);
         // matrix for drawing on canvas
         transform = new Affine();
         // post move steps
@@ -77,6 +84,8 @@ public class GameController implements javafx.fxml.Initializable {
         // fx volume
         soundFxVolume = 1;
         rollCount = 0;
+        playerX=playerY=playerTilt=0;
+        playerImage = null;
     }
 
     /**
@@ -88,36 +97,11 @@ public class GameController implements javafx.fxml.Initializable {
      * @param angle Current tilt angle
      */
     private void onMoving(long now, double x, double y, double angle) {
-        // draw board
-        drawBoard();
+        playerX = x;
+        playerY = y;
+        playerTilt = angle;
         // get rocket image
-        var img = ((now / 100000000) & 1) == 0 ? thrustImage1 : thrustImage2;
-        // calculate transform: translate -> rotate
-        transform.setToIdentity();
-        transform.appendTranslation(x - img.getWidth() / 2,
-                y - img.getHeight() * ADJUST_PLAYER_HEIGHT_MULTIPLIER);
-        transform.appendRotation(angle);
-        // set transform and draw
-        gfx.setTransform(transform);
-        gfx.drawImage(img, 0, 0);
-    }
-
-    /**
-     * Draw "passive" player at position.
-     *
-     * @param x x position
-     * @param y y position
-     */
-    private void drawPlayerAt(double x, double y) {
-        // draw board
-        drawBoard();
-        // calculate transform: translate -> rotate
-        transform.setToIdentity();
-        transform.appendTranslation(x - passiveImage.getWidth() / 2,
-                y - passiveImage.getHeight() * ADJUST_PLAYER_HEIGHT_MULTIPLIER);
-        // set transform and draw
-        gfx.setTransform(transform);
-        gfx.drawImage(passiveImage, 0, 0);
+        playerImage = ((now / 100000000) & 1) == 0 ? thrustImage1 : thrustImage2;
     }
 
     /**
@@ -161,6 +145,10 @@ public class GameController implements javafx.fxml.Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        var media = GameMedia.getSingleton();
+        gameMessage = new GameMessage(animationManager, gameCanvas,
+                new Point2D(TEXT_START_X, TEXT_START_Y),
+                new Point2D(TEXT_END_X, TEXT_END_Y));
         // slider
         volumeSlider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
@@ -177,8 +165,7 @@ public class GameController implements javafx.fxml.Initializable {
         gameBoard.setOnGameEvent(this::onGameEventHandler);
 
         // load die animation into player and view
-        var media = new Media(GameApplication.class.getResource("die_roll.mp4").toString());
-        diePlayer = new MediaPlayer(media);
+        diePlayer = new MediaPlayer(media.getMedia("roll"));
         diePlayer.setAutoPlay(false);
         rollVideoView.setMediaPlayer(diePlayer);
         diePlayer.setOnEndOfMedia(() -> {
@@ -186,25 +173,21 @@ public class GameController implements javafx.fxml.Initializable {
         });
 
         // background image
-        boardBackground = new Image(GameApplication.class.getResourceAsStream("board.png"));
+        boardBackground = media.getImage("board");
 
         // player images
-        passiveImage = new Image(GameApplication.class.getResourceAsStream("rocket_hull.png"));
-        thrustImage1 = new Image(GameApplication.class.getResourceAsStream("rocket_hull_a.png"));
-        thrustImage2 = new Image(GameApplication.class.getResourceAsStream("rocket_hull_b.png"));
+        passiveImage = media.getImage("hull");
+        thrustImage1 = media.getImage("hull flame1");
+        thrustImage2 = media.getImage("hull flame2");
 
         // sounds
-        thrustSound = GameSounds.getSingleton().getSound("thruster");
-        music = GameSounds.getSingleton().getMusic();
+        thrustSound = media.getAudioClip("thruster");
+        music = new MediaPlayer(media.getMedia("music"));
+        music.setCycleCount(Integer.MAX_VALUE);
         music.setVolume(MAX_MUSIC_VOLUME);
 
         // Get graphics context for drawing
         gfx = gameCanvas.getGraphicsContext2D();
-
-        // game alerts
-        gameMessage = new GameMessage(gameCanvas,
-                new Point2D(TEXT_START_X, TEXT_START_Y),
-                new Point2D(TEXT_END_X, TEXT_END_Y));
 
         // Draw board
         drawBoard();
@@ -232,6 +215,20 @@ public class GameController implements javafx.fxml.Initializable {
     }
 
     /**
+     * Draw "passive" player at position.
+     */
+    private void drawPlayer() {
+        // calculate transform: translate -> rotate
+        transform.setToIdentity();
+        transform.appendTranslation(playerX - playerImage.getWidth() / 2,
+                playerY - playerImage.getHeight() * ADJUST_PLAYER_HEIGHT_MULTIPLIER);
+        transform.appendRotation(playerTilt);
+        // set transform and draw
+        gfx.setTransform(transform);
+        gfx.drawImage(playerMover.isMoving() ? playerImage : passiveImage, 0, 0);
+    }
+
+    /**
      * Initiate player movement.
      *
      * @param moveType Type string
@@ -249,7 +246,7 @@ public class GameController implements javafx.fxml.Initializable {
             // seth movement path
             var src = source.getNormal();
             // start moving
-            mover.move(
+            playerMover.move(
                     moveType,
                     src.distance(targetPointN) * MAX_MOVE_TIME,
                     src.getX() * gameCanvas.getWidth(), // normals to actual canvas coordinates
@@ -274,7 +271,6 @@ public class GameController implements javafx.fxml.Initializable {
      * @param y
      */
     private void onMoveFinished(String moveType, double x, double y) {
-        drawPlayerAt(x, y);
         thrustSound.stop();
         if (moveType.equals(MOVE_NORMAL)) {
             gameBoard.handleRoll(lastRolled);
@@ -309,7 +305,7 @@ public class GameController implements javafx.fxml.Initializable {
      */
     private void onGameEventHandler(IGameEvent event) {
         // play event sound
-        var sound = GameSounds.getSingleton().getSound(event.getEventSoundId(lastRolled));
+        var sound = GameMedia.getSingleton().getAudioClip(event.getEventSoundId(lastRolled));
         if (sound != null) {
             sound.play(soundFxVolume);
         }

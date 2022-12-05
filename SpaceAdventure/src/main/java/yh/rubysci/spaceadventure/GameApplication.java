@@ -9,9 +9,13 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class GameApplication extends Application {
+    public static void main(String[] args) {
+        launch();
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
-        GameSounds.getSingleton();
+        GameMedia.getSingleton();
 
         FXMLLoader fxmlLoader = new FXMLLoader(GameApplication.class.getResource("game-view.fxml"));
         Parent root = fxmlLoader.load();
@@ -19,8 +23,5 @@ public class GameApplication extends Application {
         stage.setTitle("Space Adventure");
         stage.setScene(scene);
         stage.show();
-    }
-    public static void main(String[] args) {
-        launch();
     }
 }

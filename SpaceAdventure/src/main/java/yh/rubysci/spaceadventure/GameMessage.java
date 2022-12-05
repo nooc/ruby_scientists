@@ -1,6 +1,6 @@
 package yh.rubysci.spaceadventure;
 
-import javafx.animation.AnimationTimer;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -10,26 +10,80 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Alert;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.transform.Affine;
 import javafx.util.Duration;
 import yh.rubysci.spaceadventure.logic.IGameEvent;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Queue;
+import java.util.function.Function;
 
 public class GameMessage {
 
+    private static final String FONT_NAME = "Arial Bold";
+    private static final int FONT_TITLE_SIZE = 48;
+    private static final int FONT_BODY_SIZE = 24;
     private static final double LIFETIME_SECONDS = 5;
-    private class CanvasMessage {
+    private final LinkedList<CanvasMessage> activeMessages;
+    private final Point2D startPos;
+    private final Point2D endPos;
+    private final Font titleFont;
+    private final Font bodyFont;
+    private final AnimationManager animationManager;
+    private final Canvas canvas;
+    public GameMessage(AnimationManager animationManager, Canvas canvas, Point2D startPos, Point2D endPos) {
+        this.canvas = canvas;
+        this.animationManager = animationManager;
+        this.startPos = new Point2D(startPos.getX() * canvas.getWidth(), startPos.getY() * canvas.getHeight());
+        this.endPos = new Point2D(endPos.getX() * canvas.getWidth(), endPos.getY() * canvas.getHeight());
+        this.titleFont = Font.font(FONT_NAME, FONT_TITLE_SIZE);
+        this.bodyFont = Font.font(FONT_NAME, FONT_BODY_SIZE);
+        this.activeMessages = new LinkedList<>();
+    }
+
+    /**
+     * Show message.
+     *
+     * @param gameEvent Event containing message.
+     * @param roll
+     */
+    public void showMessage(IGameEvent gameEvent, int roll) {
+        if (!gameEvent.hasMessage(roll)) {
+            return;
+        }
+        var text = new CanvasMessage(
+                gameEvent.getEventTitle(roll),
+                gameEvent.getEventMessage(roll),
+                startPos,
+                endPos);
+        text.setOnFinished(this::clearMessage);
+        activeMessages.add(text);
+        text.play();
+        animationManager.addAnimation(text);
+    }
+
+    /**
+     * Remove completed message using timeline as ref.
+     *
+     * @param evt
+     */
+    private void clearMessage(ActionEvent evt) {
+        var ref = evt.getSource();
+        activeMessages.remove(ref);
+    }
+
+    private class CanvasMessage implements Function<Long, Boolean> {
         final DoubleProperty xPos;
         final DoubleProperty yPos;
         final DoubleProperty alpha;
-        private Timeline timeline;
         final String title;
         final String message;
+        private final Affine identity;
+        private final Timeline timeline;
 
         public CanvasMessage(String title, String message, Point2D startPos, Point2D endPos) {
+            this.identity = new Affine();
             this.xPos = new SimpleDoubleProperty();
             this.yPos = new SimpleDoubleProperty();
             this.alpha = new SimpleDoubleProperty();
@@ -37,7 +91,7 @@ public class GameMessage {
             this.message = message;
             var key0 = new KeyFrame(
                     Duration.ZERO,
-                    new KeyValue(xPos,startPos.getX()),
+                    new KeyValue(xPos, startPos.getX()),
                     new KeyValue(yPos, startPos.getY()),
                     new KeyValue(alpha, 1.0)
             );
@@ -48,6 +102,7 @@ public class GameMessage {
                     new KeyValue(alpha, 0.0)
             );
             timeline = new Timeline(key0, key1);
+            identity.setToIdentity();
         }
 
         @Override
@@ -58,80 +113,43 @@ public class GameMessage {
         public void setOnFinished(EventHandler<ActionEvent> handler) {
             timeline.setOnFinished(handler);
         }
+
         void play() {
             timeline.play();
         }
-    }
 
-    private final Canvas canvas;
-    private final LinkedList<CanvasMessage> activeMessages;
-    private final AnimationTimer timer;
-    private final Point2D startPos;
-    private final Point2D endPos;
+        /**
+         * Draw messages.
+         *
+         * @param now unused
+         */
+        @Override
+        public Boolean apply(Long now) {
+            var gfx = canvas.getGraphicsContext2D();
+            gfx.save();
+            // Draw all active texts.
+            double currentX = xPos.get();
+            double currentY = yPos.get();
+            double currentAlpha = alpha.get();
 
-    public GameMessage(Canvas canvas, Point2D startPos, Point2D endPos) {
-        this.canvas = canvas;
-        this.startPos = startPos;
-        this.endPos = endPos;
+            // Draw text
+            gfx.setTransform(identity);
+            gfx.setGlobalAlpha(currentAlpha);
+            gfx.setStroke(Color.BLACK);
 
-        this.activeMessages = new LinkedList<>();
-        timer = new AnimationTimer() {
-            @Override
-            public void handle(long l) {
-                drawMessages(l);
-            }
-        };
-    }
+            var textY = currentY - titleFont.getSize() - 5;
+            gfx.setFont(titleFont);
+            gfx.setFill(Color.ORANGE);
+            gfx.fillText(title, currentX, textY);
+            gfx.strokeText(title, currentX, textY);
 
-    /**
-     * Show message.
-     * TODO: Change from dialogue to canvas.
-     *
-     * @param gameEvent Event containing message.
-     * @param roll
-     */
-    public void showMessage(IGameEvent gameEvent, int roll) {
-        if (!gameEvent.hasMessage(roll)) { return; }
-        var text = new CanvasMessage(
-                gameEvent.getEventTitle(roll),
-                gameEvent.getEventMessage(roll),
-                startPos,
-                endPos);
-        text.setOnFinished(this::clearMessage);
-        activeMessages.add(text);
-        text.play();
-        timer.start();
-    }
+            gfx.setFont(bodyFont);
+            gfx.setFill(Color.YELLOW);
+            gfx.fillText(message, currentX, currentY);
+            gfx.strokeText(message, currentX, currentY);
 
-    /**
-     * Remove completed message using timeline as ref.
-     * @param evt
-     */
-    private void clearMessage(ActionEvent evt) {
-        var ref = evt.getSource();
-        activeMessages.remove(ref);
-    }
-
-    /**
-     * Draw messages.
-     * @param l unused
-     */
-    private void drawMessages(long l) {
-
-        // Draw all active texts.
-        for (var message: activeMessages) {
-            var title = message.title;
-            var body = message.message;
-            double currentX = message.xPos.get();
-            double currentY = message.xPos.get();
-            double currentAlpha = message.alpha.get();
-
-            //TODO: Draw text
-        }
-
-        // Stop timer if no more messages.
-        if (activeMessages.isEmpty()) {
-            timer.stop();
+            gfx.restore();
+            return timeline.statusProperty().get().equals(Animation.Status.RUNNING);
         }
     }
 }

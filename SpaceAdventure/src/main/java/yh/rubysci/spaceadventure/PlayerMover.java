@@ -1,6 +1,6 @@
 package yh.rubysci.spaceadventure;
 
-import javafx.animation.AnimationTimer;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -9,26 +9,23 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.util.Duration;
 
 public class PlayerMover {
-    private final AnimationTimer timer;
     private final FinishedHandler finishedHandler;
     private final InterpolationHandler movementHandler;
     private final DoubleProperty xPos;
     private final DoubleProperty yPos;
     private final DoubleProperty angle;
+    private final AnimationManager manager;
     private Timeline timeline;
+    private boolean _isMoving;
 
-    public PlayerMover(FinishedHandler finishedHandler, InterpolationHandler movementHandler) {
+    public PlayerMover(AnimationManager manager, FinishedHandler finishedHandler, InterpolationHandler movementHandler) {
+        this.manager = manager;
         this.finishedHandler = finishedHandler;
         this.movementHandler = movementHandler;
         xPos = new SimpleDoubleProperty();
         yPos = new SimpleDoubleProperty();
         angle = new SimpleDoubleProperty();
-        timer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                movementHandler.currentValue(now, xPos.get(), yPos.get(), angle.get());
-            }
-        };
+        _isMoving = false;
     }
 
     /**
@@ -60,12 +57,22 @@ public class PlayerMover {
                 new KeyValue(angle, 0)
         );
         timeline = new Timeline(key0, key1, key2);
-        timeline.setOnFinished(evt -> {
-            timer.stop();
-            finishedHandler.handleMoveFinished(moveType, x1, y1);
-        });
+        _isMoving = true;
         timeline.play();
-        timer.start();
+        manager.addAnimation(now -> {
+            _isMoving = timeline.statusProperty().get().equals(Animation.Status.RUNNING);
+            if (_isMoving) {
+                movementHandler.currentValue(now, xPos.get(), yPos.get(), angle.get());
+            } else {
+                finishedHandler.handleMoveFinished(moveType, x1, y1);
+                return false;
+            }
+            return true;
+        });
+    }
+
+    public boolean isMoving() {
+        return _isMoving;
     }
 
     public interface InterpolationHandler {
