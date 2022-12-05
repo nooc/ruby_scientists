@@ -276,6 +276,7 @@ public class GameController implements javafx.fxml.Initializable {
             gameBoard.handleRoll(lastRolled);
         } else if (moveType.equals(MOVE_POST)) {
             gameBoard.postMove(postMove);
+            setButtonStates(GameButtonState.Idle);
         }
     }
 
@@ -324,8 +325,10 @@ public class GameController implements javafx.fxml.Initializable {
                 movePlayer(MOVE_POST,
                         BoardLocations.getLocation(gameBoard.getIndexWithOffset(postMove))
                 );
+            } else {
+                setButtonStates(GameButtonState.Idle);
             }
-            setButtonStates(GameButtonState.Idle);
+
         }
     }
 
