@@ -31,9 +31,9 @@ public class GameController implements javafx.fxml.Initializable {
     private static final String MOVE_POST = "post";
     private static final double ADJUST_PLAYER_HEIGHT_MULTIPLIER = 0.8;
     private static final double TEXT_START_X = 0.1;
-    private static final double TEXT_START_Y = 0.7;
+    private static final double TEXT_START_Y = 0.6;
     private static final double TEXT_END_X = 0.1;
-    private static final double TEXT_END_Y = 1;
+    private static final double TEXT_END_Y = 0.9;
     private final AnimationManager animationManager;
     private final PlayerMover playerMover;
     private final Affine transform;

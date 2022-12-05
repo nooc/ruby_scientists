@@ -96,12 +96,16 @@ public class GameMessage {
                     new KeyValue(alpha, 1.0)
             );
             var key1 = new KeyFrame(
+                    Duration.seconds(LIFETIME_SECONDS*0.7),
+                    new KeyValue(alpha, 0.9)
+            );
+            var key2 = new KeyFrame(
                     Duration.seconds(LIFETIME_SECONDS),
                     new KeyValue(xPos, endPos.getX()),
                     new KeyValue(yPos, endPos.getY()),
                     new KeyValue(alpha, 0.0)
             );
-            timeline = new Timeline(key0, key1);
+            timeline = new Timeline(key0, key1, key2);
             identity.setToIdentity();
         }
 
